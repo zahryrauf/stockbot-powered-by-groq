@@ -42,14 +42,19 @@ interface MutableAIState {
   get: () => AIState
 }
 
-const MODEL = 'llama-3.3-70b-versatile'
-const TOOL_MODEL = 'llama-3.3-70b-versatile'
+const MODEL = 'openai/gpt-oss-120b'
+const TOOL_MODEL = 'openai/gpt-oss-120b'
 const GROQ_API_KEY_ENV = process.env.GROQ_API_KEY
+const OPENAI_API_KEY_ENV = process.env.OPENAI_API_KEY
 
 type ComparisonSymbolObject = {
   symbol: string;
-  position: "SameScale";
-};
+  position: 'SameScale'
+}
+
+const emptyToolArgsSchema = z
+  .union([z.object({}), z.literal(null)])
+  .transform(() => ({}))
 
 async function generateCaption(
   symbol: string,
@@ -58,8 +63,8 @@ async function generateCaption(
   aiState: MutableAIState
 ): Promise<string> {
   const groq = createOpenAI({
-    baseURL: 'https://api.groq.com/openai/v1',
-    apiKey: GROQ_API_KEY_ENV
+    baseURL: 'https://integrate.api.nvidia.com/v1',
+    apiKey: OPENAI_API_KEY_ENV
   })
   
   const stockString = comparisonSymbols.length === 0
@@ -222,7 +227,15 @@ Assistant (you): { "tool_call": { "id": "pending", "type": "function", "function
           name: message.name
         }))
       ],
-      text: ({ content, done, delta }) => {
+      text: ({
+        content,
+        done,
+        delta
+      }: {
+        content: string
+        done: boolean
+        delta: string
+      }) => {
         if (!textStream) {
           textStream = createStreamableValue('')
           textNode = <BotMessage content={textStream.value} />
@@ -267,7 +280,13 @@ Assistant (you): { "tool_call": { "id": "pending", "type": "function", "function
               )
           }),
 
-          generate: async function* ({ symbol, comparisonSymbols }) {
+          generate: async function* ({
+            symbol,
+            comparisonSymbols
+          }: {
+            symbol: string
+            comparisonSymbols: ComparisonSymbolObject[]
+          }) {
             yield (
               <BotCard>
                 <></>
@@ -332,7 +351,7 @@ Assistant (you): { "tool_call": { "id": "pending", "type": "function", "function
                 'The name or symbol of the stock or currency. e.g. DOGE/AAPL/USD.'
               )
           }),
-          generate: async function* ({ symbol }) {
+          generate: async function* ({ symbol }: { symbol: string }) {
             yield (
               <BotCard>
                 <></>
@@ -396,7 +415,7 @@ Assistant (you): { "tool_call": { "id": "pending", "type": "function", "function
                 'The name or symbol of the stock or currency. e.g. DOGE/AAPL/USD.'
               )
           }),
-          generate: async function* ({ symbol }) {
+          generate: async function* ({ symbol }: { symbol: string }) {
             yield (
               <BotCard>
                 <></>
@@ -461,7 +480,7 @@ Assistant (you): { "tool_call": { "id": "pending", "type": "function", "function
                 'The name or symbol of the stock or currency. e.g. DOGE/AAPL/USD.'
               )
           }),
-          generate: async function* ({ symbol }) {
+          generate: async function* ({ symbol }: { symbol: string }) {
             yield (
               <BotCard>
                 <></>
@@ -519,8 +538,9 @@ Assistant (you): { "tool_call": { "id": "pending", "type": "function", "function
         showStockScreener: {
           description:
             'This tool shows a generic stock screener which can be used to find new stocks based on financial or technical parameters.',
-          parameters: z.object({}),
-          generate: async function* ({ }) {
+          parameters: emptyToolArgsSchema,
+          generate: async function* (options: Record<string, never> = {}) {
+            const {} = options
             yield (
               <BotCard>
                 <></>
@@ -576,8 +596,9 @@ Assistant (you): { "tool_call": { "id": "pending", "type": "function", "function
         },
         showMarketOverview: {
           description: `This tool shows an overview of today's stock, futures, bond, and forex market performance including change values, Open, High, Low, and Close values.`,
-          parameters: z.object({}),
-          generate: async function* ({ }) {
+          parameters: emptyToolArgsSchema,
+          generate: async function* (options: Record<string, never> = {}) {
+            const {} = options
             yield (
               <BotCard>
                 <></>
@@ -633,8 +654,8 @@ Assistant (you): { "tool_call": { "id": "pending", "type": "function", "function
         },
         showMarketHeatmap: {
           description: `This tool shows a heatmap of today's stock market performance across sectors. It is preferred over showMarketOverview if asked specifically about the stock market.`,
-          parameters: z.object({}),
-          generate: async function* ({ }) {
+          parameters: emptyToolArgsSchema,
+          generate: async function* (_options: Record<string, never> = {}) {
             yield (
               <BotCard>
                 <></>
@@ -690,8 +711,8 @@ Assistant (you): { "tool_call": { "id": "pending", "type": "function", "function
         },
         showETFHeatmap: {
           description: `This tool shows a heatmap of today's ETF performance across sectors and asset classes. It is preferred over showMarketOverview if asked specifically about the ETF market.`,
-          parameters: z.object({}),
-          generate: async function* ({ }) {
+          parameters: emptyToolArgsSchema,
+          generate: async function* (_options: Record<string, never> = {}) {
             yield (
               <BotCard>
                 <></>
@@ -747,8 +768,8 @@ Assistant (you): { "tool_call": { "id": "pending", "type": "function", "function
         },
         showTrendingStocks: {
           description: `This tool shows the daily top trending stocks including the top five gaining, losing, and most active stocks based on today's performance`,
-          parameters: z.object({}),
-          generate: async function* ({ }) {
+          parameters: emptyToolArgsSchema,
+          generate: async function* (_options: Record<string, never> = {}) {
             yield (
               <BotCard>
                 <></>
