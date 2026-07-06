@@ -44,7 +44,6 @@ interface MutableAIState {
 
 const MODEL = 'openai/gpt-oss-120b'
 const TOOL_MODEL = 'openai/gpt-oss-120b'
-const GROQ_API_KEY_ENV = process.env.GROQ_API_KEY
 const OPENAI_API_KEY_ENV = process.env.OPENAI_API_KEY
 
 type ComparisonSymbolObject = {
@@ -193,8 +192,8 @@ async function submitUserMessage(content: string) {
 
   try {
     const groq = createOpenAI({
-      baseURL: 'https://api.groq.com/openai/v1',
-      apiKey: GROQ_API_KEY_ENV
+      baseURL: 'https://integrate.api.nvidia.com/v1',
+      apiKey: OPENAI_API_KEY_ENV
     })
 
     const result = await streamUI({
